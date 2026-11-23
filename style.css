@@ -1,7 +1,7 @@
 /* SpotMAC — thème sombre, cartes de collection */
 :root{
   --bg:#0d0e10;--surface:#16181b;--surface2:#1d2024;--line:#2a2e33;--text:#f2f3f5;--muted:#8d939c;
-  --accent:#f5b841;--accent-ink:#1a1407;--green:#35d39a;--red:#ff5a5f;
+  --accent:#ff4fa3;--accent-ink:#2b0617;--green:#ff7ab8;--red:#ff5a5f;
   --c-body:#dde4ea;--c-art:#97a6b2;--c-badge:#c3ced8;
   --r-body:#d6e5ff;--r-art:#7da1e3;--r-badge:#a7c6ff;
   --e-body:#e8ddff;--e-art:#9f86dc;--e-badge:#c9b2ff;
@@ -55,7 +55,7 @@ input:focus,select:focus{border-color:var(--accent)}
 .search{width:100%;margin-bottom:12px}
 .seg{display:inline-flex;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:3px;gap:2px}
 .seg button{background:none;border:0;border-radius:9px;padding:7px 14px;color:var(--muted);font-weight:600;font-size:14px}
-.seg button.on{background:var(--green);color:#06281b}
+.seg button.on{background:var(--accent);color:var(--accent-ink)}
 .seg.wide{display:flex;margin:22px 0 16px}.seg.wide button{flex:1;padding:10px}
 .filters{display:flex;gap:8px;overflow-x:auto;padding-bottom:10px;margin-bottom:4px;scrollbar-width:none}
 .filters::-webkit-scrollbar{display:none}
@@ -70,7 +70,7 @@ input:focus,select:focus{border-color:var(--accent)}
 .booster-zone .link{margin-top:6px}
 .pack{position:relative;width:190px;height:288px;margin:34px 0 26px;border-radius:8px;overflow:hidden;
   background:linear-gradient(115deg,#ffffff 0%,#e3e6ea 28%,#fbfbfc 46%,#d3d8de 64%,#f4f5f7 100%);
-  box-shadow:0 0 70px rgba(245,184,65,.28),0 24px 40px rgba(0,0,0,.55);animation:float 3.2s ease-in-out infinite;cursor:pointer}
+  box-shadow:0 0 70px rgba(255,79,163,.32),0 24px 40px rgba(0,0,0,.55);animation:float 3.2s ease-in-out infinite;cursor:pointer}
 .pack::before,.pack::after{content:"";position:absolute;left:0;right:0;height:13px;z-index:2;
   background:repeating-linear-gradient(90deg,#cdd2d8 0 3px,#f6f7f8 3px 6px)}
 .pack::before{top:0}.pack::after{bottom:0}
@@ -153,7 +153,7 @@ input:focus,select:focus{border-color:var(--accent)}
 
 /* Collection */
 .progress{margin-bottom:12px}.progress p{font-size:13px;color:var(--muted);margin-top:6px}
-.bar{height:7px;background:var(--surface);border-radius:4px;overflow:hidden}.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--green),var(--accent))}
+.bar{height:7px;background:var(--surface);border-radius:4px;overflow:hidden}.bar i{display:block;height:100%;background:linear-gradient(90deg,#b46cff,var(--accent))}
 
 /* Listes (marché, échanges, classement) */
 .list{display:flex;flex-direction:column;gap:10px}
