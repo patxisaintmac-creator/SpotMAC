@@ -157,3 +157,27 @@ nav button{position:relative}
 .dlg-actions{flex-wrap:wrap}
 .dlg-actions .big{flex:1 1 100%}
 .dlg-actions .ghost{flex:1 1 auto;padding:12px}
+
+/* --- Photos, fiche technique, ouverture carte par carte --- */
+.tc-art.photo{padding:0;overflow:hidden;background:#000}
+.tc-art.photo img{width:100%;height:100%;object-fit:cover;display:block}
+.tcard .tc-art{min-height:0}
+#dlgSpecs{padding:0 14px}
+#dlgSpecs h4{margin:6px 0 6px;font-size:15px}
+.specs{width:100%;border-collapse:collapse;font-size:13px}
+.specs th{text-align:left;color:var(--muted);font-weight:600;padding:5px 8px 5px 0;vertical-align:top;width:40%}
+.specs td{padding:5px 0;border-bottom:1px solid var(--line)}
+.specs th{border-bottom:1px solid var(--line)}
+.extract{font-size:13px;line-height:1.45;margin:10px 0 0;color:var(--text)}
+.credit{font-size:11px;color:var(--muted);margin-top:8px;line-height:1.4}
+.credit a{color:var(--accent)}
+.deck{position:relative;width:min(68vw,250px);aspect-ratio:5/7;margin:10px auto 20px;cursor:pointer;user-select:none}
+.deck-card{position:absolute;inset:0;transform:translate(calc(var(--k) * 5px),calc(var(--k) * -5px));transition:transform .45s ease,opacity .45s ease}
+.deck-card .inner{height:100%;aspect-ratio:auto}
+.deck-card.gone{transform:translate(-140%,30px) rotate(-22deg);opacity:0}
+.deck .back-face{flex-direction:column;gap:6px;font-size:22px;border-width:3px;border-radius:16px}
+.deck .back-face b span{color:var(--accent)}.deck .back-face small{font-size:12px;color:var(--muted)}
+.tcard.big.deckc{width:100%;height:100%;margin:0}
+.reveal-grid{grid-template-columns:repeat(3,1fr)}
+.deck{margin-top:34px}
+.tcard:has(.tc-art.photo) .tc-mono{display:none}
