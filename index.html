@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#111318">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>SpotMAC</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <h1>Spot<span>MAC</span></h1>
+  <div class="head-right">
+    <div class="wallet"><span id="macBalance">0</span> MAC</div>
+    <button id="btnRanking" class="avatar hidden" aria-label="Classement">🏆</button>
+    <button id="btnProfile" class="avatar hidden" aria-label="Profil">👤</button>
+  </div>
+</header>
+
+<main>
+  <!-- CONNEXION -->
+  <section id="view-login" class="view">
+    <div class="login">
+      <div class="filters" id="loginTabs">
+        <button type="button" data-m="in" class="on">Se connecter</button>
+        <button type="button" data-m="up">Créer un compte</button>
+      </div>
+      <form id="loginForm">
+        <label>E-mail <input type="email" id="loginEmail" required autocomplete="email"></label>
+        <label>Mot de passe (6 caractères minimum) <input type="password" id="loginPass" required minlength="6" autocomplete="current-password"></label>
+        <button class="big" type="submit" id="btnLogin">Se connecter</button>
+        <button class="ghost" type="button" id="btnForgot">Mot de passe oublié ?</button>
+      </form>
+      <p class="hint" id="loginInfo"></p>
+    </div>
+    <form id="newPassForm" class="hidden login">
+      <h2>Nouveau mot de passe</h2>
+      <label>Nouveau mot de passe <input type="password" id="newPass" required minlength="6" autocomplete="new-password"></label>
+      <button class="big" type="submit">Enregistrer</button>
+    </form>
+  </section>
+
+  <!-- BOOSTER -->
+  <section id="view-booster" class="view">
+    <div class="booster-zone" id="boosterZone">
+      <div class="pack" id="pack"><div class="pack-in"><b>Spot<span>MAC</span></b><small>BOOSTER</small><i>5 cartes</i></div></div>
+      <p class="b-count" id="bCount"></p>
+      <p class="hint center" id="bNext"></p>
+      <button class="big" id="btnOpen">Ouvrir un booster</button>
+      <p class="hint center">1 booster toutes les 10 minutes, 15 maximum en stock. Chaque scan dans la rue = +1 booster bonus (10 par jour).</p>
+    </div>
+    <div class="reveal hidden" id="reveal">
+      <p class="hint center">Touche les cartes pour les retourner</p>
+      <div class="reveal-grid" id="revealGrid"></div>
+      <div class="cam-actions">
+        <button class="big" id="btnAgain">Ouvrir le suivant</button>
+        <button class="ghost" id="btnToCollection">Collection</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- COLLECTION -->
+  <section id="view-collection" class="view">
+    <div class="progress"><div class="bar"><i id="progBar"></i></div><p id="progTxt"></p></div>
+    <input class="search" id="colSearch" placeholder="Rechercher une marque, un modèle…" autocomplete="off">
+    <div class="filters" id="colFilters">
+      <button data-f="all" class="on">Toutes</button>
+      <button data-f="legendaire">Légendaires</button>
+      <button data-f="epique">Épiques</button>
+      <button data-f="rare">Rares</button>
+      <button data-f="commune">Communes</button>
+      <button data-f="dup">Doublons</button>
+    </div>
+    <button class="ghost wide-btn" id="btnSellDup">Vendre tous les doublons</button>
+    <div class="tgrid" id="colGrid"></div>
+    <button class="ghost wide-btn hidden" id="colMore">Afficher plus</button>
+    <p class="empty hidden" id="colEmpty"></p>
+  </section>
+
+  <!-- MARCHÉ -->
+  <section id="view-market" class="view">
+    <h2>Enchères en cours</h2>
+    <p class="hint">Pour vendre une carte aux enchères : ouvre-la dans ta collection → « Mettre aux enchères ».</p>
+    <div id="auctions" class="list"></div>
+  </section>
+
+  <!-- ÉCHANGES -->
+  <section id="view-trades" class="view">
+    <h2>Propositions reçues</h2>
+    <div id="tradesIn" class="list"></div>
+    <h2>Mes propositions</h2>
+    <div id="tradesOut" class="list"></div>
+    <p class="hint">Pour proposer un échange : 🏆 Classement → ouvre la collection d'un joueur → choisis une carte.</p>
+  </section>
+
+  <!-- GARAGE (scans) -->
+  <section id="view-garage" class="view">
+    <button class="big" id="btnGoScan">📸 Scanner une voiture</button>
+    <div class="stats" id="stats"></div>
+    <div class="grid" id="grid"></div>
+    <p class="empty hidden" id="empty">Ton garage est vide. Scanne les voitures que tu croises : chaque scan te rapporte un booster bonus.</p>
+  </section>
+
+  <!-- SCAN -->
+  <section id="view-scan" class="view">
+    <button class="ghost back" id="btnBackGarage">← Garage</button>
+    <div class="camera">
+      <video id="video" playsinline autoplay muted></video>
+      <img id="preview" alt="">
+      <div class="cam-msg" id="camMsg"></div>
+    </div>
+    <div class="cam-actions">
+      <button id="btnShoot" class="big">📸 Prendre la photo</button>
+      <button id="btnRetake" class="ghost hidden">Reprendre</button>
+    </div>
+    <form id="carForm" class="hidden">
+      <label>Marque <select id="scanBrand" required></select></label>
+      <label>Modèle <select id="scanModel" required disabled></select></label>
+      <label>Génération <select id="scanGen" required disabled></select></label>
+      <p class="hint" id="scanRarity"></p>
+      <label class="check"><input type="checkbox" name="custom"> Custom (covering, couleur hors série, modifs)</label>
+      <button type="submit" class="big" id="btnAdd">Ajouter au garage</button>
+    </form>
+  </section>
+
+  <!-- CLASSEMENT -->
+  <section id="view-ranking" class="view">
+    <h2>Classement des collectionneurs</h2>
+    <div id="ranking" class="list"></div>
+  </section>
+
+  <!-- COLLECTION D'UN AUTRE JOUEUR -->
+  <section id="view-player" class="view">
+    <button class="ghost back" id="btnBackRanking">← Classement</button>
+    <h2 id="playerTitle"></h2>
+    <input class="search" id="playerSearch" placeholder="Rechercher…" autocomplete="off">
+    <div class="tgrid" id="playerGrid"></div>
+  </section>
+
+  <!-- PROFIL -->
+  <section id="view-profile" class="view">
+    <h2 id="profileTitle">Profil</h2>
+    <label>Marque préférée (revente ×2, changement 1 fois par trimestre)
+      <select id="favBrand"></select>
+    </label>
+    <button id="btnFav" class="big">Enregistrer</button>
+    <p class="hint" id="favInfo"></p>
+    <h2>Paliers de scans</h2>
+    <ul class="milestones" id="milestones"></ul>
+    <h2>Revente immédiate d'une carte</h2>
+    <ul class="scale">
+      <li><i class="r-commune"></i>Commune : 1 MAC</li>
+      <li><i class="r-rare"></i>Rare : 2 MAC</li>
+      <li><i class="r-epique"></i>Épique : 5 MAC</li>
+      <li><i class="r-legendaire"></i>Légendaire : 50 MAC (100 en série limitée)</li>
+    </ul>
+    <button id="btnLogout" class="ghost wide-btn">Se déconnecter</button>
+  </section>
+</main>
+
+<!-- Fiche (carte ou scan) -->
+<dialog id="carDialog">
+  <div id="dlgVisual"></div>
+  <h3 id="dlgTitle"></h3>
+  <p id="dlgMeta"></p>
+  <div id="dlgExtra"></div>
+  <div class="dlg-actions" id="dlgActions"></div>
+</dialog>
+
+<!-- Premier lancement -->
+<dialog id="welcome">
+  <form class="welcome" id="welcomeForm">
+    <h3>Bienvenue sur Spot<span>MAC</span> !</h3>
+    <label>Ton pseudo (3 à 20 caractères) <input id="welcomePseudo" required minlength="3" maxlength="20"></label>
+    <label>Ta marque préférée : ses cartes se revendent <b>×2</b>. Changement possible une fois par trimestre.
+      <select id="welcomeBrand" required></select>
+    </label>
+    <p class="hint">🎁 3 boosters t'attendent !</p>
+    <button class="big" type="submit">C'est parti</button>
+  </form>
+</dialog>
+
+<div id="toast"></div>
+
+<nav id="nav" class="hidden">
+  <button data-v="collection">🃏<span>Collection</span></button>
+  <button data-v="market">🔨<span>Marché</span></button>
+  <button data-v="booster" class="on">🎁<span>Booster</span><b class="num hidden" id="boosterNum"></b></button>
+  <button data-v="trades">🔄<span>Échanges</span><b class="dot hidden" id="tradeDot"></b></button>
+  <button data-v="garage">🏠<span>Garage</span></button>
+</nav>
+
+<canvas id="canvas" hidden></canvas>
+<input type="file" id="fileCam" accept="image/*" capture="environment" hidden>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
