@@ -1,6 +1,6 @@
 // Service worker : met l'appli en cache pour qu'elle s'ouvre vite.
 // Les données (Supabase) ne sont jamais mises en cache.
-const CACHE = 'spotmac-online-v5';
+const CACHE = 'spotmac-online-v6';
 const FILES = ['./', 'index.html', 'style.css', 'app.js', 'wiki.js', 'config.js', 'models.json', 'manifest.json', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', e => {
