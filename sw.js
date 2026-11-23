@@ -1,6 +1,6 @@
 // Service worker : met l'appli en cache pour qu'elle s'ouvre vite.
 // Les données (Supabase) ne sont jamais mises en cache.
-const CACHE = 'spotmac-online-v6';
+const CACHE = 'spotmac-online-v7';
 const FILES = ['./', 'index.html', 'style.css', 'app.js', 'wiki.js', 'config.js', 'models.json', 'manifest.json', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', e => {
@@ -14,7 +14,7 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET' || new URL(e.request.url).origin !== location.origin) return;
   e.respondWith(
-    fetch(e.request).then(r => {
+    fetch(e.request, { cache: 'no-cache' }).then(r => {   // revérifie toujours auprès du serveur
       const copy = r.clone();
       caches.open(CACHE).then(c => c.put(e.request, copy));
       return r;
