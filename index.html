@@ -3,21 +3,25 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#111318">
+<meta name="theme-color" content="#0d0e10">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>SpotMAC</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <header>
-  <h1>Spot<span>MAC</span></h1>
+  <div class="logo">Spot<span>MAC</span></div>
   <div class="head-right">
-    <div class="wallet"><span id="macBalance">0</span> MAC</div>
-    <button id="btnRanking" class="avatar hidden" aria-label="Classement">🏆</button>
-    <button id="btnProfile" class="avatar hidden" aria-label="Profil">👤</button>
+    <div class="wallet"><i class="coin">M</i><span id="macBalance">0</span></div>
+    <button id="btnProfile" class="icon-btn hidden" aria-label="Profil">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 5-6 8-6s6.5 2 8 6"/></svg>
+    </button>
   </div>
 </header>
 
@@ -25,7 +29,9 @@
   <!-- CONNEXION -->
   <section id="view-login" class="view">
     <div class="login">
-      <div class="filters" id="loginTabs">
+      <h1 class="title">Spot<span>MAC</span></h1>
+      <p class="sub">Collectionne toutes les voitures du monde</p>
+      <div class="seg wide" id="loginTabs">
         <button type="button" data-m="in" class="on">Se connecter</button>
         <button type="button" data-m="up">Créer un compte</button>
       </div>
@@ -33,7 +39,7 @@
         <label>E-mail <input type="email" id="loginEmail" required autocomplete="email"></label>
         <label>Mot de passe (6 caractères minimum) <input type="password" id="loginPass" required minlength="6" autocomplete="current-password"></label>
         <button class="big" type="submit" id="btnLogin">Se connecter</button>
-        <button class="ghost" type="button" id="btnForgot">Mot de passe oublié ?</button>
+        <button class="link" type="button" id="btnForgot">Mot de passe oublié ?</button>
       </form>
       <p class="hint" id="loginInfo"></p>
     </div>
@@ -44,22 +50,35 @@
     </form>
   </section>
 
-  <!-- BOOSTER -->
+  <!-- PAQUETS -->
   <section id="view-booster" class="view">
     <div class="booster-zone" id="boosterZone">
-      <div class="pack" id="pack"><div class="pack-in"><b>Spot<span>MAC</span></b><small>BOOSTER</small><i>5 cartes</i></div></div>
-      <p class="b-count" id="bCount"></p>
-      <p class="hint center" id="bNext"></p>
-      <button class="big" id="btnOpen">Ouvrir un booster</button>
-      <p class="hint center">1 booster toutes les 10 minutes, 15 maximum en stock. Chaque scan dans la rue = +1 booster bonus (10 par jour).</p>
+      <h1 class="title">Ouvrir un paquet</h1>
+      <p class="sub">Découvre 5 nouvelles voitures</p>
+      <button class="link" type="button" id="btnHow">Comment ça marche ?</button>
+      <div class="pack" id="pack">
+        <i class="p1"></i><i class="p2"></i><i class="p3"></i><i class="p4"></i>
+        <div class="pack-logo"><b>Spot</b><b>MAC</b><small>5 cartes</small></div>
+      </div>
+      <button class="open-btn" id="btnOpen">Ouvrir</button>
+      <div class="stock">
+        <p><b id="bCount">0</b> / 15</p>
+        <small>paquets disponibles</small>
+        <small class="next" id="bNext"></small>
+      </div>
     </div>
     <div class="reveal hidden" id="reveal">
-      <p class="hint center" id="deckHint">Touche la carte pour la retourner</p>
-      <div class="deck" id="deck"></div>
+      <p class="counter" id="deckHint">Carte <b>1</b> / 5</p>
+      <div class="stage" id="deck"></div>
+      <div class="pager">
+        <button class="round" id="revPrev" aria-label="Précédente"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+        <div class="dots" id="dots"></div>
+        <button class="round" id="revNext" aria-label="Suivante"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
+      </div>
+      <button class="big" id="btnSkip">Révéler</button>
       <div class="reveal-grid hidden" id="revealGrid"></div>
-      <button class="ghost wide-btn" id="btnSkip">Tout révéler</button>
       <div class="cam-actions hidden" id="deckDone">
-        <button class="big" id="btnAgain">Ouvrir le suivant</button>
+        <button class="big" id="btnAgain">Ouvrir un autre paquet</button>
         <button class="ghost" id="btnToCollection">Collection</button>
       </div>
     </div>
@@ -67,6 +86,7 @@
 
   <!-- COLLECTION -->
   <section id="view-collection" class="view">
+    <h1 class="page-title">Collection</h1>
     <div class="progress"><div class="bar"><i id="progBar"></i></div><p id="progTxt"></p></div>
     <input class="search" id="colSearch" placeholder="Rechercher une marque, un modèle…" autocomplete="off">
     <div class="filters" id="colFilters">
@@ -85,38 +105,40 @@
 
   <!-- MARCHÉ -->
   <section id="view-market" class="view">
-    <h2>Enchères en cours</h2>
-    <p class="hint">Pour vendre une carte aux enchères : ouvre-la dans ta collection → « Mettre aux enchères ».</p>
+    <h1 class="page-title">Marché</h1>
+    <p class="hint">Enchères en cours. Pour vendre une carte : ouvre-la dans ta collection → Actions → Mettre aux enchères.</p>
     <div id="auctions" class="list"></div>
   </section>
 
   <!-- ÉCHANGES -->
   <section id="view-trades" class="view">
+    <h1 class="page-title">Échanges</h1>
     <h2>Propositions reçues</h2>
     <div id="tradesIn" class="list"></div>
     <h2>Mes propositions</h2>
     <div id="tradesOut" class="list"></div>
-    <p class="hint">Pour proposer un échange : 🏆 Classement → ouvre la collection d'un joueur → choisis une carte.</p>
+    <p class="hint">Pour proposer un échange : Plus → Classement → ouvre la collection d'un joueur → choisis une carte.</p>
   </section>
 
   <!-- GARAGE (scans) -->
   <section id="view-garage" class="view">
-    <button class="big" id="btnGoScan">📸 Scanner une voiture</button>
+    <h1 class="page-title">Garage</h1>
+    <button class="big" id="btnGoScan">Scanner une voiture</button>
     <div class="stats" id="stats"></div>
     <div class="grid" id="grid"></div>
-    <p class="empty hidden" id="empty">Ton garage est vide. Scanne les voitures que tu croises : chaque scan te rapporte un booster bonus.</p>
+    <p class="empty hidden" id="empty">Ton garage est vide. Scanne les voitures que tu croises : chaque scan te rapporte un paquet bonus.</p>
   </section>
 
   <!-- SCAN -->
   <section id="view-scan" class="view">
-    <button class="ghost back" id="btnBackGarage">← Garage</button>
+    <button class="link back" id="btnBackGarage">← Garage</button>
     <div class="camera">
       <video id="video" playsinline autoplay muted></video>
       <img id="preview" alt="">
       <div class="cam-msg" id="camMsg"></div>
     </div>
     <div class="cam-actions">
-      <button id="btnShoot" class="big">📸 Prendre la photo</button>
+      <button id="btnShoot" class="big">Prendre la photo</button>
       <button id="btnRetake" class="ghost hidden">Reprendre</button>
     </div>
     <form id="carForm" class="hidden">
@@ -131,21 +153,21 @@
 
   <!-- CLASSEMENT -->
   <section id="view-ranking" class="view">
-    <h2>Classement des collectionneurs</h2>
+    <h1 class="page-title">Classement</h1>
     <div id="ranking" class="list"></div>
   </section>
 
   <!-- COLLECTION D'UN AUTRE JOUEUR -->
   <section id="view-player" class="view">
-    <button class="ghost back" id="btnBackRanking">← Classement</button>
-    <h2 id="playerTitle"></h2>
+    <button class="link back" id="btnBackRanking">← Classement</button>
+    <h1 class="page-title" id="playerTitle"></h1>
     <input class="search" id="playerSearch" placeholder="Rechercher…" autocomplete="off">
     <div class="tgrid" id="playerGrid"></div>
   </section>
 
   <!-- PROFIL -->
   <section id="view-profile" class="view">
-    <h2 id="profileTitle">Profil</h2>
+    <h1 class="page-title" id="profileTitle">Profil</h1>
     <label>Marque préférée (revente ×2, changement 1 fois par trimestre)
       <select id="favBrand"></select>
     </label>
@@ -164,25 +186,51 @@
   </section>
 </main>
 
-<!-- Fiche (carte ou scan) -->
-<dialog id="carDialog">
+<!-- Fiche d'une carte (panneau qui monte du bas) -->
+<dialog id="carDialog" class="sheet">
+  <div class="grab"></div>
+  <button class="icon-btn sheet-x" id="dlgX" aria-label="Fermer"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
   <div id="dlgVisual"></div>
-  <h3 id="dlgTitle"></h3>
-  <p id="dlgMeta"></p>
-  <div id="dlgExtra"></div>
-  <div id="dlgSpecs"></div>
-  <div class="dlg-actions" id="dlgActions"></div>
+  <div class="sheet-head">
+    <h3 id="dlgTitle"></h3>
+    <div class="seg" id="dlgTabs"><button type="button" data-t="info" class="on">Détails</button><button type="button" data-t="act">Actions</button></div>
+  </div>
+  <div class="pane" id="paneInfo"><p id="dlgMeta"></p><div id="dlgSpecs"></div></div>
+  <div class="pane hidden" id="paneAct"><div id="dlgExtra"></div><div class="dlg-actions" id="dlgActions"></div></div>
+</dialog>
+
+<!-- Menu « Plus » -->
+<dialog id="moreDialog" class="sheet menu">
+  <div class="grab"></div>
+  <button class="menu-item" data-go="garage"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7v9H3z"/><path d="M9 20v-6h6v6"/></svg>Garage<small>Tes voitures scannées dans la rue</small></button>
+  <button class="menu-item" data-go="scan"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="3"/><circle cx="12" cy="13.5" r="3.5"/><path d="M8 7l1.5-3h5L16 7"/></svg>Scanner une voiture<small>+1 paquet bonus par scan</small></button>
+  <button class="menu-item" data-go="ranking" id="btnRanking"><svg viewBox="0 0 24 24"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg>Classement<small>Les meilleurs collectionneurs</small></button>
+  <button class="menu-item" data-go="profile"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 5-6 8-6s6.5 2 8 6"/></svg>Profil<small>Marque préférée, paliers</small></button>
+</dialog>
+
+<!-- Comment ça marche -->
+<dialog id="howDialog" class="sheet">
+  <div class="grab"></div>
+  <h3>Comment ça marche ?</h3>
+  <ul class="how">
+    <li><b>1 paquet toutes les 10 minutes</b>, jusqu'à 15 en stock. Chaque paquet contient 5 cartes, dont la dernière est au moins rare.</li>
+    <li><b>Raretés :</b> commune 65 %, rare 25 %, épique 8 %, légendaire 2 % par carte.</li>
+    <li><b>Vends</b> tes doublons pour gagner des MAC, ou mets tes cartes aux <b>enchères</b>.</li>
+    <li><b>Échange</b> tes cartes avec les autres joueurs depuis le classement.</li>
+    <li><b>Scanne</b> les voitures dans la rue : chaque scan rapporte un paquet bonus (10 par jour).</li>
+  </ul>
+  <button class="big" type="button" onclick="this.closest('dialog').close()">Compris</button>
 </dialog>
 
 <!-- Premier lancement -->
 <dialog id="welcome">
   <form class="welcome" id="welcomeForm">
-    <h3>Bienvenue sur Spot<span>MAC</span> !</h3>
+    <h3>Bienvenue sur Spot<span>MAC</span></h3>
     <label>Ton pseudo (3 à 20 caractères) <input id="welcomePseudo" required minlength="3" maxlength="20"></label>
-    <label>Ta marque préférée : ses cartes se revendent <b>×2</b>. Changement possible une fois par trimestre.
+    <label>Ta marque préférée : ses cartes se revendent ×2. Changement possible une fois par trimestre.
       <select id="welcomeBrand" required></select>
     </label>
-    <p class="hint">🎁 15 boosters t'attendent !</p>
+    <p class="hint">15 paquets t'attendent.</p>
     <button class="big" type="submit">C'est parti</button>
   </form>
 </dialog>
@@ -190,11 +238,11 @@
 <div id="toast"></div>
 
 <nav id="nav" class="hidden">
-  <button data-v="collection">🃏<span>Collection</span></button>
-  <button data-v="market">🔨<span>Marché</span></button>
-  <button data-v="booster" class="on">🎁<span>Booster</span><b class="num hidden" id="boosterNum"></b></button>
-  <button data-v="trades">🔄<span>Échanges</span><b class="dot hidden" id="tradeDot"></b></button>
-  <button data-v="garage">🏠<span>Garage</span></button>
+  <button data-v="booster" class="on"><svg viewBox="0 0 24 24"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg><span>Paquets</span><b class="num hidden" id="boosterNum"></b></button>
+  <button data-v="collection"><svg viewBox="0 0 24 24"><path d="M2 5h7a3 3 0 0 1 3 3v12a2 2 0 0 0-2-2H2z"/><path d="M22 5h-7a3 3 0 0 0-3 3v12a2 2 0 0 1 2-2h8z"/></svg><span>Collection</span></button>
+  <button data-v="trades"><svg viewBox="0 0 24 24"><path d="M4 8h14l-4-4"/><path d="M20 16H6l4 4"/></svg><span>Échanges</span><b class="dot hidden" id="tradeDot"></b></button>
+  <button data-v="market"><svg viewBox="0 0 24 24"><path d="M13 5l6 6M10 8l6 6M11.5 6.5l6 6-3 3-6-6z"/><path d="M9 12l-6 6 3 3 6-6M14 21h7"/></svg><span>Marché</span></button>
+  <button data-v="more"><svg viewBox="0 0 24 24" class="fill"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg><span>Plus</span></button>
 </nav>
 
 <canvas id="canvas" hidden></canvas>
