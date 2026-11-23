@@ -54,9 +54,11 @@
       <p class="hint center">1 booster toutes les 10 minutes, 15 maximum en stock. Chaque scan dans la rue = +1 booster bonus (10 par jour).</p>
     </div>
     <div class="reveal hidden" id="reveal">
-      <p class="hint center">Touche les cartes pour les retourner</p>
-      <div class="reveal-grid" id="revealGrid"></div>
-      <div class="cam-actions">
+      <p class="hint center" id="deckHint">Touche la carte pour la retourner</p>
+      <div class="deck" id="deck"></div>
+      <div class="reveal-grid hidden" id="revealGrid"></div>
+      <button class="ghost wide-btn" id="btnSkip">Tout révéler</button>
+      <div class="cam-actions hidden" id="deckDone">
         <button class="big" id="btnAgain">Ouvrir le suivant</button>
         <button class="ghost" id="btnToCollection">Collection</button>
       </div>
@@ -168,6 +170,7 @@
   <h3 id="dlgTitle"></h3>
   <p id="dlgMeta"></p>
   <div id="dlgExtra"></div>
+  <div id="dlgSpecs"></div>
   <div class="dlg-actions" id="dlgActions"></div>
 </dialog>
 
@@ -179,7 +182,7 @@
     <label>Ta marque préférée : ses cartes se revendent <b>×2</b>. Changement possible une fois par trimestre.
       <select id="welcomeBrand" required></select>
     </label>
-    <p class="hint">🎁 3 boosters t'attendent !</p>
+    <p class="hint">🎁 15 boosters t'attendent !</p>
     <button class="big" type="submit">C'est parti</button>
   </form>
 </dialog>
@@ -199,5 +202,6 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
 <script src="app.js"></script>
+<script src="wiki.js"></script>
 </body>
 </html>
