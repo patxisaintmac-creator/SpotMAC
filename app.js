@@ -62,19 +62,23 @@ function timeLeft(d) {
 function button(label, cls, fn) { const b = document.createElement('button'); b.type = 'button'; b.className = cls; b.textContent = label; b.onclick = fn; return b; }
 
 // ---------- Carte dessinée ----------
+const LETTER = { commune: 'C', rare: 'R', epique: 'E', legendaire: 'L' };
+const ICON_CAL = '<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>';
+const ICON_LOCK = '<svg viewBox="0 0 24 24" style="width:1em;height:1em;stroke:#fff"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
 function cardHTML(m, { count = 0, locked = 0, size = '' } = {}) {
-  if (!m) return '<div class="tcard"><div class="tc-name">?</div></div>';
-  return `<div class="tcard r-${m.rarity} ${size}" data-mid="${m.id}">
-    <div class="tc-top"><span class="tc-brand">${esc(m.brand)}</span><span class="tc-gem"></span></div>
-    <div class="tc-mono">${esc(m.brand[0])}</div>
+  if (!m) return '<div class="tcard"><div class="tc-in"><div class="tc-body"><div class="tc-name">?</div></div></div></div>';
+  return `<div class="tcard r-${m.rarity} ${size}" data-mid="${m.id}"><div class="tc-in">
     <div class="tc-art">${silhouette(m.body)}</div>
-    <div class="tc-name">${esc(m.model)}</div>
-    <div class="tc-sub">${esc([m.gen, years(m)].filter(Boolean).join(' · '))}</div>
-    <div class="tc-rar">${LABEL[m.rarity]}</div>
-    ${m.small ? '<div class="tc-ribbon">Série limitée</div>' : ''}
+    <span class="tc-badge">${LETTER[m.rarity]}</span>
     ${count > 1 ? `<span class="tc-count">×${count}</span>` : ''}
-    ${locked ? '<span class="tc-lock">🔒</span>' : ''}
-  </div>`;
+    ${locked ? `<span class="tc-lock">${ICON_LOCK}</span>` : ''}
+    <div class="tc-body">
+      <div class="tc-brand">${esc(m.brand)}</div>
+      <div class="tc-name">${esc(m.model)}</div>
+      <div class="tc-sub">${esc(m.gen || '')}</div>
+      ${m.small ? '<div class="tc-limited">Série limitée</div>' : ''}
+      <div class="tc-foot"><span>${ICON_CAL}${esc(years(m) || '—')}</span><span>${LABEL[m.rarity]}</span></div>
+    </div></div></div>`;
 }
 const el = html => { const d = document.createElement('div'); d.innerHTML = html.trim(); return d.firstElementChild; };
 
@@ -89,9 +93,11 @@ async function loadModels() {
 }
 
 // ---------- Navigation ----------
-document.querySelectorAll('#nav button').forEach(b => b.onclick = () => go(b.dataset.v));
+document.querySelectorAll('#nav button').forEach(b => b.onclick = () => b.dataset.v === 'more' ? $('#moreDialog').showModal() : go(b.dataset.v));
+document.querySelectorAll('.menu-item').forEach(b => b.onclick = () => { $('#moreDialog').close(); go(b.dataset.go); });
+document.querySelectorAll('dialog.sheet').forEach(d => d.addEventListener('click', e => { if (e.target === d) d.close(); }));
+$('#btnHow').onclick = () => $('#howDialog').showModal();
 $('#btnProfile').onclick = () => go('profile');
-$('#btnRanking').onclick = () => go('ranking');
 $('#btnBackRanking').onclick = () => go('ranking');
 $('#btnBackGarage').onclick = () => go('garage');
 $('#btnGoScan').onclick = () => go('scan');
@@ -99,7 +105,7 @@ let current = 'login';
 function showView(v) {
   current = v;
   document.querySelectorAll('.view').forEach(s => s.classList.toggle('active', s.id === 'view-' + v));
-  const tab = { scan: 'garage', player: null, ranking: null, profile: null }[v] ?? v;
+  const tab = { scan: 'more', garage: 'more', player: 'more', ranking: 'more', profile: 'more' }[v] ?? v;
   document.querySelectorAll('#nav button').forEach(b => b.classList.toggle('on', b.dataset.v === tab));
   if (v === 'scan') startCamera(); else stopCamera();
   window.scrollTo(0, 0);
@@ -161,7 +167,7 @@ $('#btnLogout').onclick = async () => { await sb.auth.signOut(); };
 
 async function boot() {
   const logged = !!session;
-  ['#nav', '#btnProfile', '#btnRanking'].forEach(s => $(s).classList.toggle('hidden', !logged));
+  ['#nav', '#btnProfile', '#btnRanking', '.wallet'].forEach(s => $(s).classList.toggle('hidden', !logged));
   if (!logged) {
     me = null; $('#macBalance').textContent = 0;
     return showView('login');
@@ -199,16 +205,15 @@ function updateBoosterBadge() {
 function renderBoosterStatus() {
   if (!booster) return;
   const n = booster.available + booster.bonus;
-  $('#bCount').textContent = n ? `🎁 ${n} booster${n > 1 ? 's' : ''} disponible${n > 1 ? 's' : ''}` : 'Aucun booster pour l’instant';
-  $('#bCount').title = '';
+  $('#bCount').textContent = booster.available;
   $('#btnOpen').disabled = !n;
-  const bonusTxt = booster.bonus ? ` · dont ${booster.bonus} bonus` : '';
+  const bonusTxt = booster.bonus ? ` · +${booster.bonus} bonus` : '';
   clearInterval(tick);
-  if (booster.next_in == null) { $('#bNext').textContent = `Stock plein (${booster.max}/${booster.max})${bonusTxt}`; return; }
+  if (booster.next_in == null) { $('#bNext').textContent = 'Stock plein' + bonusTxt; return; }
   nextAt = Date.now() + booster.next_in * 1000;
   const upd = () => {
     const s = Math.max(0, Math.round((nextAt - Date.now()) / 1000));
-    $('#bNext').textContent = `Prochain booster dans ${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')} · stock ${booster.available}/${booster.max}${bonusTxt}`;
+    $('#bNext').textContent = `Prochain paquet dans ${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}${bonusTxt}`;
     if (s <= 0) { clearInterval(tick); if (current === 'booster') loadBooster().catch(() => {}); }
   };
   upd(); tick = setInterval(upd, 1000);
@@ -218,55 +223,82 @@ async function loadBooster() {
   booster = await call('booster_status'); updateBoosterBadge(); renderBoosterStatus();
 }
 $('#btnOpen').onclick = openBooster;
+$('#pack').onclick = openBooster;
 $('#btnAgain').onclick = async () => { await loadBooster(); if (booster.available + booster.bonus) openBooster(); };
 $('#btnToCollection').onclick = () => go('collection');
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+let opening = false;
 async function openBooster() {
-  $('#btnOpen').disabled = true;
+  if (opening || $('#btnOpen').disabled) return;
+  opening = true; $('#btnOpen').disabled = true;
   $('#pack').classList.add('shake');
   let cards;
-  try { cards = await call('open_booster'); } catch (e) { $('#pack').classList.remove('shake'); $('#btnOpen').disabled = false; return fail(e); }
-  await new Promise(r => setTimeout(r, 500));
-  $('#pack').classList.remove('shake');
+  try { cards = await call('open_booster'); }
+  catch (e) { $('#pack').classList.remove('shake'); $('#btnOpen').disabled = false; opening = false; return fail(e); }
+  await sleep(450);
+  $('#pack').classList.replace('shake', 'burst'); await sleep(380); $('#pack').classList.remove('burst');
   $('#boosterZone').classList.add('hidden'); $('#reveal').classList.remove('hidden');
   startDeck(cards.map(c => M[c.model_id]));
+  opening = false;
   booster = await call('booster_status'); updateBoosterBadge();
-  $('#btnAgain').textContent = booster.available + booster.bonus ? `Ouvrir le suivant (${booster.available + booster.bonus})` : 'Plus de booster';
-  $('#btnAgain').disabled = !(booster.available + booster.bonus);
+  const n = booster.available + booster.bonus;
+  $('#btnAgain').textContent = n ? `Ouvrir un autre paquet (${n})` : 'Plus de paquet pour l’instant';
+  $('#btnAgain').disabled = !n;
 }
 
-// Ouverture carte par carte : on retourne la carte du dessus, puis elle s'envole et laisse la suivante
+// Révélation carte par carte : « Carte 1 / 5 », on retourne, puis flèche ou glisser pour la suivante
 function startDeck(ms) {
-  const deck = $('#deck'), summary = $('#revealGrid');
-  deck.innerHTML = ''; deck.classList.remove('hidden'); summary.classList.add('hidden'); summary.innerHTML = '';
-  $('#deckDone').classList.add('hidden'); $('#btnSkip').classList.remove('hidden');
-  $('#deckHint').textContent = 'Touche la carte pour la retourner';
-  ms.forEach((m, k) => {
-    const f = el(`<div class="flip deck-card r-${m?.rarity}" style="--k:${k};z-index:${10 - k}"><div class="inner">
-      <div class="face back-face"><b>Spot<span>MAC</span></b><small>${k + 1} / ${ms.length}</small></div>
-      <div class="face front-face">${cardHTML(m, { size: 'big deckc' })}</div></div></div>`);
-    deck.appendChild(f);
-  });
-  const items = [...deck.children]; let i = 0;
+  const stage = $('#deck'), dots = $('#dots'), summary = $('#revealGrid'), pager = document.querySelector('#reveal .pager');
+  const opened = ms.map(() => false); let i = 0;
+  summary.classList.add('hidden'); summary.innerHTML = ''; $('#deckDone').classList.add('hidden');
+  [stage, pager, $('#btnSkip')].forEach(x => x.classList.remove('hidden'));
+  dots.innerHTML = ms.map(() => '<i></i>').join('');
+  const controls = () => {
+    $('#deckHint').innerHTML = `Carte <b>${i + 1}</b> / ${ms.length}`;
+    [...dots.children].forEach((d, k) => { d.className = k === i ? 'on' : opened[k] ? 'seen' : ''; });
+    const left = opened.filter(x => !x).length;
+    $('#revPrev').disabled = i === 0;
+    $('#revNext').disabled = !opened[i] || i === ms.length - 1;
+    $('#btnSkip').textContent = !opened[i] ? 'Révéler la carte' : left ? `Encore ${left} carte${left > 1 ? 's' : ''}` : 'Voir mon paquet';
+  };
+  const build = dir => {
+    const m = ms[i];
+    stage.innerHTML = `<div class="flipper${opened[i] ? ' open' : ''}"><div class="face back-face"><div class="cardback">
+      <div class="pack-logo"><b>Spot</b><b>MAC</b></div><small>Touche pour révéler</small></div></div>
+      <div class="face front-face">${cardHTML(m)}</div></div>`;
+    if (dir) { stage.classList.remove('slide-l', 'slide-r'); void stage.offsetWidth; stage.classList.add(dir > 0 ? 'slide-l' : 'slide-r'); }
+    stage.querySelector('.flipper').onclick = () => opened[i] ? openCard(m, null) : reveal();
+    controls();
+  };
+  const reveal = () => {
+    if (opened[i]) return;
+    opened[i] = true; stage.querySelector('.flipper').classList.add('open');
+    const m = ms[i];
+    if (m?.rarity === 'legendaire') toast(m.small ? 'LÉGENDAIRE · SÉRIE LIMITÉE !' : 'LÉGENDAIRE !');
+    else if (m?.rarity === 'epique') toast('Épique !');
+    controls();
+  };
+  const goTo = k => { if (k < 0 || k >= ms.length || k === i) return; const dir = k > i ? 1 : -1; i = k; build(dir); };
   const finish = () => {
-    deck.onclick = null; deck.classList.add('hidden'); $('#btnSkip').classList.add('hidden');
-    $('#deckHint').textContent = 'Ton booster :';
+    [stage, pager, $('#btnSkip')].forEach(x => x.classList.add('hidden'));
+    $('#deckHint').textContent = 'Ton paquet';
     ms.forEach(m => { const c = el(cardHTML(m)); c.onclick = () => openCard(m, null); summary.appendChild(c); });
     summary.classList.remove('hidden'); $('#deckDone').classList.remove('hidden');
   };
-  deck.onclick = () => {
-    const f = items[i], m = ms[i]; if (!f) return;
-    if (!f.classList.contains('open')) {
-      f.classList.add('open');
-      if (m?.rarity === 'legendaire') toast(m.small ? '🔥 LÉGENDAIRE · SÉRIE LIMITÉE !' : '🔥 LÉGENDAIRE !');
-      else if (m?.rarity === 'epique') toast('✨ Épique !');
-      $('#deckHint').textContent = i < items.length - 1 ? 'Touche pour passer à la suivante' : 'Touche pour voir ton booster';
-    } else {
-      f.classList.add('gone'); i++;
-      setTimeout(() => f.remove(), 450);
-      if (i >= items.length) setTimeout(finish, 300); else $('#deckHint').textContent = 'Touche la carte pour la retourner';
-    }
+  $('#btnSkip').onclick = () => {
+    if (!opened[i]) return reveal();
+    const nxt = opened.findIndex((x, k) => !x && k > i), any = opened.findIndex(x => !x);
+    if (nxt >= 0) goTo(nxt); else if (any >= 0) goTo(any); else finish();
   };
-  $('#btnSkip').onclick = finish;
+  $('#revPrev').onclick = () => goTo(i - 1);
+  $('#revNext').onclick = () => { if (opened[i]) goTo(i + 1); };
+  let x0 = null;
+  stage.ontouchstart = e => { x0 = e.touches[0].clientX; };
+  stage.ontouchend = e => {
+    if (x0 == null) return; const dx = e.changedTouches[0].clientX - x0; x0 = null;
+    if (dx < -50 && opened[i]) goTo(i + 1); else if (dx > 50) goTo(i - 1);
+  };
+  build(0);
 }
 
 // ---------- Collection ----------
@@ -318,7 +350,15 @@ $('#btnSellDup').onclick = async () => {
 
 // ---------- Fiche d'une carte ----------
 let specToken = 0;
+function setTab(t) {
+  document.querySelectorAll('#dlgTabs button').forEach(b => b.classList.toggle('on', b.dataset.t === t));
+  $('#paneInfo').classList.toggle('hidden', t !== 'info'); $('#paneAct').classList.toggle('hidden', t !== 'act');
+}
+document.querySelectorAll('#dlgTabs button').forEach(b => b.onclick = () => setTab(b.dataset.t));
+$('#dlgX').onclick = () => $('#carDialog').close();
 function dialogBase(m, meta) {
+  setTab('info'); $('#dlgTabs').classList.remove('hidden');
+  queueMicrotask(() => $('#dlgTabs').classList.toggle('hidden', ![...$('#dlgActions').children].some(c => !c.hidden)));
   $('#dlgVisual').innerHTML = cardHTML(m, { size: 'big' });
   $('#dlgTitle').textContent = `${m.brand} ${m.model}`;
   $('#dlgMeta').textContent = meta.filter(Boolean).join(' · ');
@@ -344,7 +384,7 @@ async function loadSpecs(m) {
     ${d ? `<p class="credit">Infos : <a href="${esc(d.url)}" target="_blank" rel="noopener">Wikipédia — ${esc(d.title)}</a>${d.title && d.rows.length ? ' (les chiffres peuvent concerner tout le modèle, pas seulement cette génération)' : ''}</p>` : ''}
     ${d?.photo ? `<p class="credit">Photo : ${esc(d.photo.artist)}${d.photo.license ? ' · ' + esc(d.photo.license) : ''} · <a href="${esc(d.photo.link)}" target="_blank" rel="noopener">Wikimedia Commons</a></p>` : ''}`;
 }
-const close = () => button('Fermer', 'ghost', () => $('#carDialog').close());
+const close = () => { const s = document.createElement('span'); s.hidden = true; return s; };   // la croix ferme la fiche
 function openCard(m, g, other = null) {
   if (!m) return;
   dialogBase(m, [LABEL[m.rarity] + (m.small ? ' · série limitée' : ''), m.gen, years(m),
@@ -363,6 +403,7 @@ function openCard(m, g, other = null) {
   $('#carDialog').showModal();
 }
 function auctionForm(m, cardId) {
+  setTab('act');
   $('#dlgExtra').innerHTML = `<label>Prix de départ (MAC) <input type="number" id="aucStart" min="1" value="${price(m)}"></label>
     <label>Durée <select id="aucHours"><option value="1">1 heure</option><option value="6">6 heures</option>
     <option value="24" selected>24 heures</option><option value="48">48 heures</option><option value="72">72 heures</option></select></label>`;
@@ -375,6 +416,7 @@ function auctionForm(m, cardId) {
   }), button('Annuler', 'ghost', () => $('#carDialog').close()));
 }
 async function tradeForm(target, targetCardId) {
+  setTab('act');
   let groups;
   try { groups = groupCards(await fetchAll(() => sb.from('cards').select('id,model_id,locked').eq('owner', uid()).eq('locked', false))); }
   catch (e) { return fail(e); }
@@ -434,6 +476,7 @@ function bidDialog(a, m) {
     try { await call('place_bid', { p_auction: a.id, p_amount: parseInt($('#bidAmount').value, 10) }); $('#carDialog').close(); toast('Offre placée !'); go('market'); }
     catch (e) { fail(e); }
   }), button('Annuler', 'ghost', () => $('#carDialog').close()));
+  $('#dlgTabs').classList.add('hidden'); setTab('act');
   $('#carDialog').showModal();
 }
 
@@ -512,7 +555,8 @@ async function loadGarage() {
       $('#dlgVisual').innerHTML = `<img src="${esc(photoUrl(s.photo_path))}" alt="">`;
       $('#dlgTitle').textContent = `${m.brand} ${m.model}`;
       $('#dlgMeta').textContent = [LABEL[m.rarity], s.custom ? 'Custom' : '', m.gen, years(m), 'Scannée le ' + fmtDate(s.created_at)].filter(Boolean).join(' · ');
-      $('#dlgExtra').innerHTML = ''; $('#dlgActions').innerHTML = ''; $('#dlgActions').append(close());
+      $('#dlgExtra').innerHTML = ''; $('#dlgActions').innerHTML = ''; $('#dlgSpecs').innerHTML = '';
+      setTab('info'); $('#dlgTabs').classList.add('hidden');
       $('#carDialog').showModal();
     };
     grid.appendChild(c);
@@ -610,7 +654,7 @@ $('#carForm').onsubmit = async e => {
     const { error } = await sb.storage.from('photos').upload(path, shotBlob, { contentType: 'image/jpeg' });
     if (error) throw new Error('Envoi de la photo impossible : ' + error.message);
     const r = await call('add_scan', { p_model: modelId, p_custom: !!new FormData(e.target).get('custom'), p_photo: path });
-    toast([r.bonus ? '+1 booster bonus 🎁' : 'Ajoutée au garage (bonus du jour atteint)', r.mac ? `palier : +${r.mac} MAC` : ''].filter(Boolean).join(' · '));
+    toast([r.bonus ? 'Ajoutée au garage · +1 paquet bonus' : 'Ajoutée au garage (bonus du jour atteint)', r.mac ? `palier : +${r.mac} MAC` : ''].filter(Boolean).join(' · '));
     go('garage');
   } catch (err) { fail(err); }
   finally { btn.disabled = false; btn.textContent = 'Ajouter au garage'; }
