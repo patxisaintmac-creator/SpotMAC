@@ -27,6 +27,7 @@ const configured = !!(cfg.url && cfg.key && !cfg.url.startsWith('COLLE') && wind
 const sb = configured ? window.supabase.createClient(cfg.url, cfg.key) : null;
 
 let session = null, me = null, M = {}, MODELS = [], BRANDS = [], booster = null;
+window.M = M;
 
 // ---------- Utilitaires ----------
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -63,7 +64,7 @@ function button(label, cls, fn) { const b = document.createElement('button'); b.
 // ---------- Carte dessinée ----------
 function cardHTML(m, { count = 0, locked = 0, size = '' } = {}) {
   if (!m) return '<div class="tcard"><div class="tc-name">?</div></div>';
-  return `<div class="tcard r-${m.rarity} ${size}">
+  return `<div class="tcard r-${m.rarity} ${size}" data-mid="${m.id}">
     <div class="tc-top"><span class="tc-brand">${esc(m.brand)}</span><span class="tc-gem"></span></div>
     <div class="tc-mono">${esc(m.brand[0])}</div>
     <div class="tc-art">${silhouette(m.body)}</div>
@@ -227,16 +228,45 @@ async function openBooster() {
   await new Promise(r => setTimeout(r, 500));
   $('#pack').classList.remove('shake');
   $('#boosterZone').classList.add('hidden'); $('#reveal').classList.remove('hidden');
-  const grid = $('#revealGrid'); grid.innerHTML = '';
-  cards.forEach(c => {
-    const m = M[c.model_id];
-    const f = el(`<div class="flip r-${m?.rarity}"><div class="inner"><div class="face back-face">?</div><div class="face front-face">${cardHTML(m)}</div></div></div>`);
-    f.onclick = () => { if (!f.classList.contains('open')) { f.classList.add('open'); if (m?.rarity === 'legendaire') toast('🔥 LÉGENDAIRE !'); } else openCard(m, null); };
-    grid.appendChild(f);
-  });
+  startDeck(cards.map(c => M[c.model_id]));
   booster = await call('booster_status'); updateBoosterBadge();
   $('#btnAgain').textContent = booster.available + booster.bonus ? `Ouvrir le suivant (${booster.available + booster.bonus})` : 'Plus de booster';
   $('#btnAgain').disabled = !(booster.available + booster.bonus);
+}
+
+// Ouverture carte par carte : on retourne la carte du dessus, puis elle s'envole et laisse la suivante
+function startDeck(ms) {
+  const deck = $('#deck'), summary = $('#revealGrid');
+  deck.innerHTML = ''; deck.classList.remove('hidden'); summary.classList.add('hidden'); summary.innerHTML = '';
+  $('#deckDone').classList.add('hidden'); $('#btnSkip').classList.remove('hidden');
+  $('#deckHint').textContent = 'Touche la carte pour la retourner';
+  ms.forEach((m, k) => {
+    const f = el(`<div class="flip deck-card r-${m?.rarity}" style="--k:${k};z-index:${10 - k}"><div class="inner">
+      <div class="face back-face"><b>Spot<span>MAC</span></b><small>${k + 1} / ${ms.length}</small></div>
+      <div class="face front-face">${cardHTML(m, { size: 'big deckc' })}</div></div></div>`);
+    deck.appendChild(f);
+  });
+  const items = [...deck.children]; let i = 0;
+  const finish = () => {
+    deck.onclick = null; deck.classList.add('hidden'); $('#btnSkip').classList.add('hidden');
+    $('#deckHint').textContent = 'Ton booster :';
+    ms.forEach(m => { const c = el(cardHTML(m)); c.onclick = () => openCard(m, null); summary.appendChild(c); });
+    summary.classList.remove('hidden'); $('#deckDone').classList.remove('hidden');
+  };
+  deck.onclick = () => {
+    const f = items[i], m = ms[i]; if (!f) return;
+    if (!f.classList.contains('open')) {
+      f.classList.add('open');
+      if (m?.rarity === 'legendaire') toast(m.small ? '🔥 LÉGENDAIRE · SÉRIE LIMITÉE !' : '🔥 LÉGENDAIRE !');
+      else if (m?.rarity === 'epique') toast('✨ Épique !');
+      $('#deckHint').textContent = i < items.length - 1 ? 'Touche pour passer à la suivante' : 'Touche pour voir ton booster';
+    } else {
+      f.classList.add('gone'); i++;
+      setTimeout(() => f.remove(), 450);
+      if (i >= items.length) setTimeout(finish, 300); else $('#deckHint').textContent = 'Touche la carte pour la retourner';
+    }
+  };
+  $('#btnSkip').onclick = finish;
 }
 
 // ---------- Collection ----------
@@ -287,11 +317,32 @@ $('#btnSellDup').onclick = async () => {
 };
 
 // ---------- Fiche d'une carte ----------
+let specToken = 0;
 function dialogBase(m, meta) {
   $('#dlgVisual').innerHTML = cardHTML(m, { size: 'big' });
   $('#dlgTitle').textContent = `${m.brand} ${m.model}`;
   $('#dlgMeta').textContent = meta.filter(Boolean).join(' · ');
   $('#dlgExtra').innerHTML = ''; $('#dlgActions').innerHTML = '';
+  loadSpecs(m);
+}
+async function loadSpecs(m) {
+  const box = $('#dlgSpecs'), token = ++specToken;
+  box.innerHTML = '<p class="hint">Chargement de la fiche technique…</p>';
+  let d = null;
+  try { d = await window.WIKI.details(m); } catch (e) {}
+  if (token !== specToken) return;
+  const base = [['Génération', m.gen], ['Années', years(m)], ['Rareté', LABEL[m.rarity] + (m.small ? ' · série limitée (< 1 000 ex.)' : '')]].filter(r => r[1]);
+  const rows = [...base, ...(d?.rows || [])];
+  if (d?.photo) {
+    const img = $('#dlgVisual .tc-art');
+    if (img) { img.innerHTML = `<img src="${esc(d.photo.src)}" alt="">`; img.classList.add('photo'); }
+  }
+  box.innerHTML = `<h4>Fiche technique</h4>
+    <table class="specs">${rows.map(([k, v]) => `<tr><th>${esc(k)}</th><td>${esc(v)}</td></tr>`).join('')}</table>
+    ${d?.rows?.length ? '' : '<p class="hint">Pas de fiche détaillée trouvée pour ce modèle.</p>'}
+    ${d?.extract ? `<p class="extract">${esc(d.extract)}</p>` : ''}
+    ${d ? `<p class="credit">Infos : <a href="${esc(d.url)}" target="_blank" rel="noopener">Wikipédia — ${esc(d.title)}</a>${d.title && d.rows.length ? ' (les chiffres peuvent concerner tout le modèle, pas seulement cette génération)' : ''}</p>` : ''}
+    ${d?.photo ? `<p class="credit">Photo : ${esc(d.photo.artist)}${d.photo.license ? ' · ' + esc(d.photo.license) : ''} · <a href="${esc(d.photo.link)}" target="_blank" rel="noopener">Wikimedia Commons</a></p>` : ''}`;
 }
 const close = () => button('Fermer', 'ghost', () => $('#carDialog').close());
 function openCard(m, g, other = null) {
